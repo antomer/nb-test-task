@@ -182,15 +182,15 @@ Analyze log `somesite.log` file for possible security threats.
     176.9.71.213 - - [08/Oct/2019:05:13:29 +0300] "GET /wp-admin/admin-ajax.php?action=revslider_show_image&img=../wp-config.php HTTP/1.1" 403 - "-" "Chrome"
     ```
 
-5. Next, I've investigated requests which were filtered out in step `1` and made from `Mozilla/5.0`/`Mozilla/5.1` UserAgents (`Nuhk/2.4` and `WordPress/5.2.3` intentionally left aside since there were only several not harmful requests from those UserAgents). 
+5. Next, I've investigated requests which were filtered out in step `1` and made from `Mozilla/5.0`/`Mozilla/5.1` compatible UserAgents (`Nuhk/2.4` and `WordPress/5.2.3` intentionally left aside since there were only several not harmful requests from those UserAgents). 
     ```
-    cat somesite.log |egrep -v "Nuhk/2.4|WordPress/5.2.3|/cgi-sys/suspendedpage.cgi|/xmlrpc.php" |egrep "Mozilla/5.(0|1)"
+    cat somesite.log |egrep -v "Nuhk/2.4|WordPress/5.2.3" |egrep "Mozilla/5.(0|1)"
     ```
 
     Since the result was still too big decided to manually check for SQL injection attempts.
 
     ```
-    cat somesite.log |egrep -v "Nuhk/2.4|WordPress/5.2.3|/cgi-sys/suspendedpage.cgi|/xmlrpc.php" |egrep "Mozilla/5.(0|1)" | egrep -i "drop|update|insert|sql"
+    cat somesite.log |egrep -v "Nuhk/2.4|WordPress/5.2.3" |egrep "Mozilla/5.(0|1)" | egrep -i "drop|update|insert|sql"
     ```
 
     <details>
@@ -315,6 +315,7 @@ Analyze log `somesite.log` file for possible security threats.
 
     We can see lots of GET requests made to `*.sql` files which indicate on SQL injection attack.
 
+
 # Results 
  
 As a result of a log file security threat analysis, several attacks were spotted:
@@ -328,4 +329,6 @@ As a result of a log file security threat analysis, several attacks were spotted
     176.9.71.213 - - [08/Oct/2019:05:13:29 +0300] "GET /wp-admin/admin-ajax.php?action=revslider_show_image&img=../index.php HTTP/1.1" 403 - "-" "Chrome"
     176.9.71.213 - - [08/Oct/2019:05:13:29 +0300] "GET /wp-admin/admin-ajax.php?action=revslider_show_image&img=../wp-config.php HTTP/1.1" 403 - "-" "Chrome"
     ```
-3. lot's of SQL injection attack attempts (see `5.` for more detailed results)
+3. lots of SQL injection attack attempts (see `5.` for more detailed results)
+
+Out of them all, 1st threat with a successful POST request to `xmlrpc.php` from `Poster` UserAgent seem to be the most dangerous one. Since it was a successful request and attacker may potentially get access to WordPress. 
