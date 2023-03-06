@@ -314,3 +314,18 @@ Analyze log `somesite.log` file for possible security threats.
     </details>
 
     We can see lots of GET requests made to `*.sql` files which indicate on SQL injection attack.
+
+# Results 
+ 
+As a result of a log file security threat analysis, several attacks were spotted:
+
+1. `xmlrpc.php` exploit attempts, and most likely 1 of the attempts was successful (see `2.` for more detailed results):
+    ```
+    107.180.109.9 - - [06/Oct/2019:17:37:12 +0300] "POST /xmlrpc.php HTTP/1.1" 200 402 "-" "Poster"
+    ```
+2. directory traversal attempts (see `4.` for more detailed results):
+    ```
+    176.9.71.213 - - [08/Oct/2019:05:13:29 +0300] "GET /wp-admin/admin-ajax.php?action=revslider_show_image&img=../index.php HTTP/1.1" 403 - "-" "Chrome"
+    176.9.71.213 - - [08/Oct/2019:05:13:29 +0300] "GET /wp-admin/admin-ajax.php?action=revslider_show_image&img=../wp-config.php HTTP/1.1" 403 - "-" "Chrome"
+    ```
+3. lot's of SQL injection attack attempts (see `5.` for more detailed results)
