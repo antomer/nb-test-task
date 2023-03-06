@@ -4,8 +4,7 @@ Analyze log `somesite.log` file for possible security threats.
 
 # Investigation flow
 
-1. At first checked log fiel by eye. Straight away spotted few suspicious requests made from not common user agents like "Go-http-client", "wordpress" etc. so filtered out requests:
-
+1. At first, I checked the log file by eye. Straight away spotted few suspicious requests made from not common user agents like "Go-http-client", "wordpress" etc. so I filtered out requests:
     ```
     cat somesite.log | egrep -v "Mozilla/5.0|Mozilla/5.1|Virusdie crawler/3.0|Nuhk/2.4|WordPress/5.2.3"
     ```
@@ -71,7 +70,8 @@ Analyze log `somesite.log` file for possible security threats.
     </pre>
     </details>
 
-2. In results I've quickly spotted lots of suspicious POST request to `/xmlrpc.php` as it is commonly used for exploits. Investigated it further:
+2. In the results, I've quickly spotted lots of suspicious POST requests to `/xmlrpc.php`, as it is commonly used for exploits. Investigated it further:
+
     ```
     cat somesite.log | egrep -v "Mozilla/5.0|Mozilla/5.1|Virusdie crawler/3.0|Nuhk/2.4|WordPress/5.2.3"  | egrep "/xmlrpc.php"
     ```
@@ -101,13 +101,13 @@ Analyze log `somesite.log` file for possible security threats.
     </pre>
     </details>
 
-    All of those requests seems to be a targeted attack trying to get remote access to wordpress, all of them are coming from weird UserAgents like `Poster` or `WordPress`. But one of the requests was successful, which may mean that system was exploited:
+    All of those requests seem to be a targeted attack trying to get remote access to WordPress, all of them are coming from weird UserAgents like `Poster` or `WordPress`. But one of the requests was successful, which may mean that system was exploited:
 
     ```
     107.180.109.9 - - [06/Oct/2019:17:37:12 +0300] "POST /xmlrpc.php HTTP/1.1" 200 402 "-" "Poster"
     ```
 
-3. Continued invstigation by filtering out requests made to `xmlrpc.php`.
+3. Continued investigation by filtering out requests made to `xmlrpc.php`.
     ```
     cat somesite.log | egrep -v "Mozilla/5.0|Mozilla/5.1|Virusdie crawler/3.0|Nuhk/2.4|WordPress/5.2.3|/xmlrpc.php"
     ```
@@ -150,9 +150,9 @@ Analyze log `somesite.log` file for possible security threats.
     </pre>
     </details>
 
-    See lots of successful GET requests made to `/cgi-sys/suspendedpage.cgi`, it may signalize that website was down at that time (maybe maintenance). Doesn't seem harmful security wise.
+    Found lots of successful GET requests made to `/cgi-sys/suspendedpage.cgi`, it may signalize that website was down at that time (maybe maintenance). Doesn't seem harmful security-wise.
 
-4. As a next step I've filtered out requests made to `/cgi-sys/suspendedpage.cgi` 
+4. As a next step, I've filtered out requests made to `/cgi-sys/suspendedpage.cgi` 
     ```
     cat somesite.log | egrep -v "Mozilla/5.0|Mozilla/5.1|Virusdie crawler/3.0|Nuhk/2.4|WordPress/5.2.3|/xmlrpc.php|/cgi-sys/suspendedpage.cgi"
     ```
@@ -182,12 +182,12 @@ Analyze log `somesite.log` file for possible security threats.
     176.9.71.213 - - [08/Oct/2019:05:13:29 +0300] "GET /wp-admin/admin-ajax.php?action=revslider_show_image&img=../wp-config.php HTTP/1.1" 403 - "-" "Chrome"
     ```
 
-5. Next I've investigated requests which were filtered out in step `1` and made from `Mozilla/5.0`/`Mozilla/5.1` UserAgents (`Nuhk/2.4` and `WordPress/5.2.3` intentionally left aside since there were only several not harmful requests from those UserAgents). 
+5. Next, I've investigated requests which were filtered out in step `1` and made from `Mozilla/5.0`/`Mozilla/5.1` UserAgents (`Nuhk/2.4` and `WordPress/5.2.3` intentionally left aside since there were only several not harmful requests from those UserAgents). 
     ```
     cat somesite.log |egrep -v "Nuhk/2.4|WordPress/5.2.3|/cgi-sys/suspendedpage.cgi|/xmlrpc.php" |egrep "Mozilla/5.(0|1)"
     ```
 
-    Since result was still too big decided to manually check for SQL injection attempts.
+    Since the result was still too big decided to manually check for SQL injection attempts.
 
     ```
     cat somesite.log |egrep -v "Nuhk/2.4|WordPress/5.2.3|/cgi-sys/suspendedpage.cgi|/xmlrpc.php" |egrep "Mozilla/5.(0|1)" | egrep -i "drop|update|insert|sql"
@@ -313,4 +313,4 @@ Analyze log `somesite.log` file for possible security threats.
     </pre>
     </details>
 
-    We can see lots of GET requests made to `*.sql` files which indicates on SQL injection attack.
+    We can see lots of GET requests made to `*.sql` files which indicate on SQL injection attack.
