@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  AWS CloudFormation template provisions VPC, EC2, ECS, ALB, EFS resouces for running antomer/pipetest docker image as ECS service. All resources are AWS Free tier eligable.
+Parameters:
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: development
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.10.0.0/16
+
+  PublicSubnetACIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.10.10.0/24
+
+  PublicSubnetBCIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.10.11.0/24
+
+  DesiredCapacity:
+    Type: Number
+    Default: '1'
+    Description: Number of instances to launch in your ECS cluster.
+
+  PipetestDockerImage:
+    Description: Docker iamge for pieptest app
+    Type: String
+    Default: antomer/pipetest
+
+  PipetestQueriedUseres:
+    Description: Comma separated list of users to query from GitHub
+    Type: String
+    Default: antomer
+
+  PipetestPipedriveCompanyName:
+    Description: Company name in Pipedrive CRM
+    Type: String
+    Default: antonsawesomecompany
+
+  PipetestPipedriveApiKey:
+    Description: API key for Pipedrive API, should match with PipetestPipedriveCompanyName
+    Type: String
+    NoEcho: true
+
+Mappings:
+  AWSRegionToAMI:
+    eu-west-1:
+      AMIID: ami-08a2aed6e0a6f9c7d
+    eu-central-1:
+      AMIID: ami-08c148bb835696b45
+
+Resources:
+  #VPC resources
+ 
+  # ECS
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Volumes:
+        - Name: pipetest_efs
+          Host:
+            SourcePath: /efs/
+      ContainerDefinitions:
+        - Name: pipetest
+          MemoryReservation: 100
+          Hostname: pipetest
+          Image: !Ref PipetestDockerImage
+          MountPoints:
+            - ContainerPath: /db
+              SourceVolume: pipetest_efs
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /aws/ecs/pipetest
+              awslogs-create-group: 'true'
+              awslogs-region: !Ref AWS::Region
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 80
+          Environment:
+            - Name: PIPETEST_QUERIED_USERS
+              Value: !Ref PipetestQueriedUseres
+            - Name: PIPETEST_QUERYING_INTERVAL
+              Value: 30
+            - Name: PIPETEST_PIEPEDRIVE_COMPANY_NAME
+              Value: !Ref PipetestPipedriveCompanyName
+            - Name: PIPETEST_PIEPEDRIVE_API_KEY
+              Value: !Ref PipetestPipedriveApiKey
+
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn: ALBListener
+    Properties:
+      Cluster: !Ref ECSCluster
+      DesiredCount: !Ref DesiredCapacity
+      LoadBalancers:
+      - ContainerName: pipetest
+        ContainerPort: 8080
+        TargetGroupArn: !Ref ECSTG
+      Role: !Ref ECSServiceRole
+      TaskDefinition: !Ref ECSTaskDefinition
+
+  ECSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - ecs.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+              - elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+              - elasticloadbalancing:DeregisterTargets
+              - elasticloadbalancing:Describe*
+              - elasticloadbalancing:RegisterInstancesWithLoadBalancer
+              - elasticloadbalancing:RegisterTargets
+              - ec2:Describe*
+              - ec2:AuthorizeSecurityGroupIngress
+            Resource: '*'
+
+
+  # EFS
+  EFS:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      FileSystemTags:
+        - Key: Name
+          Value: pipetest_efs
+
+  EFSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "Security group for ${EnvironmentName} pipetest EFS"
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName} pipetest EFS SG"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: '0'
+          ToPort: '65535'
+          CidrIp: !Ref VpcCIDR
+
+  EFSMountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref PublicSubnetA
