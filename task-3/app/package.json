@@ -1,0 +1,23 @@
+{
+  "name": "simple-server",
+  "version": "1.0.0",
+  "description": "simple web server",
+  "main": "src/index.js",
+  "scripts": {
+    "test:unit": "LOGS_ENABLED=false npx mocha --no-warnings --ignore=node_modules/** **/*.test.js",
+    "lint": "eslint --ignore-pattern '*.test.js' .",
+    "start": "node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "chai": "^4.3.7",
+    "chai-http": "^4.3.0",
+    "eslint": "^8.35.0",
+    "eslint-config-google": "^0.14.0",
+    "mocha": "^10.2.0"
+  }
+}
