@@ -1,5 +1,5 @@
 ---
-name: Lint task-3/infra
+name: Lint and test task-3/infra
 on:
   pull_request:
     branches:
@@ -8,7 +8,8 @@ on:
       - task-3/app/**
       - .github/workflows/lint-infra.yaml
 jobs:
-  run-checks:
+  lint-test:
+    name: Lint and test
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,3 +24,13 @@ jobs:
         run: |
           shopt -s globstar
           cfn-lint -t ./task-3/infra/cloudformation/*.yaml
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ./task-3/infra/cloudformation/
+          framework: cloudformation
+          quiet: true
+          log_level: ERROR
+          output_format: github_failed_only
+          soft_fail: false  
