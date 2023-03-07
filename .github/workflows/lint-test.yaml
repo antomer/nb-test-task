@@ -1,5 +1,10 @@
 name: Lint, test and build task-3
-on: pull_request
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - task-3/app/**
 jobs:
   build:
     name: Lint and test
@@ -7,12 +12,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup NodeJS
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: "task-3/app/.nvmrc"
+          cache: "npm"
           cache-dependency-path: task-3/app/package-lock.json
 
       - name: Install dependencies
@@ -24,5 +31,5 @@ jobs:
         working-directory: task-3/app/
 
       - name: Run unit test
-        run: npm run test:unit 
+        run: npm run test:unit
         working-directory: task-3/app/
