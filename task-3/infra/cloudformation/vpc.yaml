@@ -102,4 +102,4 @@ Outputs:
     Value: !Ref VPC
   VpcCIDR:
     Description: VPC CIDR
-    Value: !Ref VPC1
+    Value: !Ref VPC
