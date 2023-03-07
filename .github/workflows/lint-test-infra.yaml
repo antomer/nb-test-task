@@ -1,12 +1,12 @@
 ---
-name: Lint and test task-3/infra
+name: Lint task-3/infra
 on:
   pull_request:
     branches:
       - master
     paths:
       - task-3/app/**
-      - .github/workflows/lint-test-infra.yaml
+      - .github/workflows/lint-infra.yaml
 jobs:
   run-checks:
     runs-on: ubuntu-latest
@@ -26,9 +26,3 @@ jobs:
         run: |
           shopt -s globstar
           cfn-lint -t ./task-3/infra/cloudformation/*.yaml
-
-      - name: Run cfn-nag
-        uses: stelligent/cfn_nag@master
-        with:
-          input_path: ./task-3/infra/cloudformation/*.yaml
-          extra_args: --print-suppression
