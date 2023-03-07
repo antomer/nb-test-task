@@ -32,5 +32,5 @@ jobs:
           framework: cloudformation
           quiet: true
           log_level: ERROR
-          output_format: github_failed_only
+          output_format: cli
           soft_fail: false  
