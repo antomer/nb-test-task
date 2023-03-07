@@ -30,7 +30,6 @@ jobs:
         with:
           directory: ./task-3/infra/cloudformation/
           framework: cloudformation
-          quiet: true
-          log_level: ERROR
+          quiet: false
+          log_level: INFO
           output_format: cli
-          soft_fail: false  
