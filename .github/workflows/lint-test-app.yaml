@@ -11,9 +11,6 @@ jobs:
     name: Lint and test
     timeout-minutes: 5
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.ref }}
-      cancel-in-progress: true
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
