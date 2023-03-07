@@ -95,7 +95,8 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnetB
-
+  ECSCluster:
+    Type: AWS::ECS::Cluster
 Outputs:
   VpcID:
     Description: VPC ID
