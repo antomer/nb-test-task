@@ -1,10 +1,10 @@
 {
-  "name": "simple-server",
+  "name": "nb-simple-service",
   "version": "1.0.0",
-  "description": "simple web server",
+  "description": "nb-simple-service",
   "main": "src/index.js",
   "scripts": {
-    "test:unit": "LOGS_ENABLED=false npx mocha --no-warnings --ignore=node_modules/** **/*.test.js",
+    "test": "LOGS_ENABLED=false npx mocha --no-warnings --ignore=node_modules/** **/*.test.js",
     "lint": "eslint --ignore-pattern '*.test.js' .",
     "start": "node src/index.js"
   },
