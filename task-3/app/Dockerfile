@@ -1,7 +1,5 @@
 # Use an official Node.js runtime as a parent image
-FROM node:16.19.1-alpine
-
-USER node
+FROM node:16.19.1-alpine 
 
 WORKDIR /app
 
