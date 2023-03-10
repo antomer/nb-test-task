@@ -113,3 +113,10 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .pnp.*
+
+.DS_Store
+
+# terraform 
+.terraform
+.terraform.lock.hcl
+terraform.tfstate*
