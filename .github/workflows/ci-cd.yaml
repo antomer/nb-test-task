@@ -58,7 +58,7 @@ jobs:
       
       - name: Build Docker image
         run: |
-          docker build -t antomer/nb-simple-service:${{ steps.get_image_tag.outputs.IMAGE_TAG }} 
+          docker build -t antomer/nb-simple-service:${{ steps.get_image_tag.outputs.IMAGE_TAG }} .
         working-directory: task-3/app/
 
       - name: Login to Docker Hub 
@@ -71,10 +71,12 @@ jobs:
         run: |
           docker push antomer/nb-simple-service:${{ steps.get_image_tag.outputs.IMAGE_TAG }}
         working-directory: task-3/app/
-
+  # push-chart:
+  #   name: Push helm chart to DockerHub
+  #   needs: build
   deploy:
     name: Deploy changes
-    needs: lint-test
+    needs: build
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
     timeout-minutes: 5
     runs-on: ubuntu-latest
