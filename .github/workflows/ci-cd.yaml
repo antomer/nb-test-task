@@ -53,7 +53,7 @@ jobs:
           fetch-depth: 0
       - name: Set image repo
         id: set_image_repo
-        run: echo "IMAGE_REPO=`antomer/nb-simple-service`" >> $GITHUB_OUTPUT
+        run: echo "IMAGE_REPO=antomer/nb-simple-service" >> $GITHUB_OUTPUT
       
       - name: Set image tag
         id: set_image_tag
