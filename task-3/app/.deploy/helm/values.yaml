@@ -12,4 +12,4 @@ deployment:
         cpu: "1"
         memory: "512Mi"
 traefik:
-  entryointName: nbsimpleservice
+  entrypointName: nbsimpleservice
