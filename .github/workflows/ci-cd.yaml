@@ -77,7 +77,7 @@ jobs:
         working-directory: task-3/app/
   deploy:
     name: Deploy changes
-    needs: deploy
+    needs: build
     #if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
     timeout-minutes: 5
     runs-on: ubuntu-latest
