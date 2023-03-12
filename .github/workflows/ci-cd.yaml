@@ -12,6 +12,8 @@ on:
     paths:
       - task-3/app/**
       - .github/workflows/ci-cd.yaml
+env:
+  DOCKER_HUB_REPOSITORY: "antomer/nb-simple-service"
 jobs:
   lint-test:
     name: Lint & test
@@ -41,13 +43,12 @@ jobs:
       - name: Run unit test
         run: npm run test
         working-directory: task-3/app/
+
   build:
     name: Build & push image
     needs: lint-test
     timeout-minutes: 5
     runs-on: ubuntu-latest
-    outputs:
-      IMAGE: ${{ steps.set_image.outputs.IMAGE }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -57,10 +58,7 @@ jobs:
       - name: Set image 
         id: set_image
         run: | 
-          DOCKER_HUB_REPOSITORY="antomer/nb-simple-service"
-          IMAGE_TAG=$(echo ${GITHUB_SHA} | cut -c1-8)
-
-          echo "IMAGE=${DOCKER_HUB_REPOSITORY}:${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "IMAGE=${DOCKER_HUB_REPOSITORY}:$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
       
       - name: Build image
         run: |
@@ -102,6 +100,4 @@ jobs:
       - name: Deploy using Helm
         working-directory: task-3/app/.deploy/helm/
         run: |
-          helm install nb-simple-service . --set deployment.container.image=${ IMAGE } -f values.yaml --wait 
-        env:
-          IMAGE: ${{needs.build.outputs.IMAGE}}
+          helm install nb-simple-service . --set deployment.container.image=${DOCKER_HUB_REPOSITORY}:$(echo ${GITHUB_SHA} | cut -c1-8) -f values.yaml --wait 
