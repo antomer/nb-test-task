@@ -1,5 +1,5 @@
 # Task 2
-## Task goal 
+## Task definition 
 > Provide infrastructure and create CI/CD with a web app that will listen 8089 port and return "ReallyNotBad" string when POST request contains header "NotBad" with value "true", eg. `curl -X POST -H "NotBad: true" https://someurl:8089/` should return "ReallyNotBad".
 
 ---
@@ -45,11 +45,18 @@ For example:
 docker build -t nb-simple-service .
 ```
 
-### Deployment
-Deplyoment is done using GitHub action and is run automatically when code is merged to master. Helm is used to template deployment configuration and is located in [app/.deploy/helm](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm) folder.
+### Deployment configuration
+Deplyoment is done using GitHub action and is run automatically when code is merged to master. Custom helm chart is used and it can be found in [app/.deploy/helm](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm) folder.
+
+Helm chart contains following kubernetes resources:
+- `Deployment`
+- `Service`
+- `HelmChartConfig (CRD)` - used to update Traefik configuration to enable custom entrypoint on port `8089`
+- `IngressRouteTCP (CRD)` - enable custom TCP port ingress and forward to Service
+
+> **!NB Traefik is already shipped with plain k3s**
 
 Service is currently deployed in AWS and can be accessed via http://35.158.175.96:8089
-
 
 
 ---
@@ -63,13 +70,13 @@ Following pre-requisites are required to run terraform
 2. AWS CLI is set up https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html
 3. Terraform CLI is installed locally https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
 
-### Module `init/`
+### **Module `init/`**
 In order to deploy main Terraform we need to provision s3 bucket to store terraform states and dynamoDB table to store terraform state locks. 
-It is automated and can be done by [init script](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/init.tf)
+Resoirce provisioning is also automated and can be done by [init module](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/init.tf)
 
 #### **How to apply**
 1. make sure Pre requisites are fullfilled
-2. From [infra/init](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/) folder run following command:
+2. From [infra/init/](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/) folder run following command:
     ```
     terraform init 
     terraform apply
@@ -99,7 +106,7 @@ aws_s3_bucket_public_access_block.terraform_state_s3_bucket_public_access_block
 aws_s3_bucket_server_side_encryption_configuration.cassandra_backups_s3_bucket_encryption_config
 ```
 
-### Module `main/`
+### **Module `main/`**
 Main Terraform module porvisions VPC with single public subnet, and single EC2 instance with k3s deployed on it. EC2 is publicly accissble. 
 
 #### **How to apply**
@@ -161,6 +168,10 @@ module.vpc.aws_subnet.public[0]
 module.vpc.aws_vpc.this[0]
 ```
 
+#### **K3S**
+[K3S](https://k3s.io/) was chosen as an container orchestrator as it is very slim and could fit into EC2 instance (`t3.micro`) (2CPU, 1GB RAM) available on AWS Free Tier.
+
+K3s is shipped with [Traefik ingress(https://traefik.io/solutions/kubernetes-ingress/)]
 
 ---
 
@@ -174,18 +185,18 @@ Pipeline consists of 3 jobs:
 2. `build` - builds and pushes container image to `DockerHub`
 3. `deploy` - using Helm deploys container image built in step 2. to AWS 
 
-### `lint-test` job
+### **`lint-test` job**
 `lint-test` job runs unit tests and lint checks for application code.
 
-### `build` job
+### **`build` job**
 `build` job builds and pushes container image to `DockerHub`, Requires repository secrets `DOCKER_HUB_USERNAME` `DOCKER_HUB_TOKEN` to be configured and match `DOCKER_HUB_REPOSITORY` set in `env` section. At the moment images are pushed to public DockerHub repositoryu `antomer/nb-simple-service`
 
 `build` job is run only if `lint-test` job was successful
 
-### `deploy` job
+### **`deploy` job**
 `deploy` job deploy helm chart with newly build image to K3S cluster. Helm chart and its values file is located in [app/.deploy/helm/](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm/) folder 
 
-### Triggers 
+### **Triggers**
 
 Pipeline is triggered automatically in two cases:
 1. on each commit in Pull Request made to master (triggers only `lint-test` and `build` jobs)

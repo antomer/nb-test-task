@@ -1,5 +1,5 @@
 # Task 1
-## Task goal
+## Task definition
 
 Analyze log `somesite.log` file for possible security threats.
 
