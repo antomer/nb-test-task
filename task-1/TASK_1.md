@@ -1,8 +1,9 @@
-# Task goal
+# Task 1
+## Task definition
 
 Analyze log `somesite.log` file for possible security threats.
 
-# Investigation flow
+## Investigation flow
 
 1. At first, I checked the log file by eye. Straight away spotted few suspicious requests made from not common user agents like "Go-http-client", "wordpress" etc. so I filtered out requests:
     ```
@@ -316,7 +317,7 @@ Analyze log `somesite.log` file for possible security threats.
     We can see lots of GET requests made to `*.sql` files which indicate on SQL injection attack.
 
 
-# Results 
+## Results 
  
 As a result of a log file security threat analysis, several attacks were spotted:
 
