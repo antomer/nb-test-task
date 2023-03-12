@@ -6,7 +6,7 @@ metadata:
 spec:
   valuesContent: |-
     additionalArguments:
-    - "--entryPoints.{{ .Values.traefik.entryointName }}.address=:{{ .Values.deployment.container.port }}/tcp"
+    - "--entryPoints.{{ .Values.traefik.entrypointName }}.address=:{{ .Values.deployment.container.port }}/tcp"
     ports:
       nbsimpleservice:
         expose: true

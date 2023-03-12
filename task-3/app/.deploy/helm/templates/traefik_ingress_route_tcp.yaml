@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   entryPoints:
-  - {{ .Values.traefik.entryointName }}
+  - {{ .Values.traefik.entrypointName }}
   routes:
   - match: HostSNI(`*`)
     services:
