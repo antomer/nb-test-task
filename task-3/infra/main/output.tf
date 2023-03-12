@@ -9,11 +9,6 @@ output "public_ip" {
   value       = module.node.public_ip
 }
 
-output "public_dns" {
-  description = "Public DNS name of the instance"
-  value       = module.node.public_dns
-}
-
 output "kubeconfig" {
   value       = ssh_resource.kubeconfig.result
   description = "kubeconfig to acces k3s cluster"
