@@ -56,7 +56,7 @@ Helm chart contains following kubernetes resources:
 
 > **!NB Traefik is already shipped with plain k3s**
 
-Service is currently deployed in AWS and can be accessed via http://35.158.175.96:8089
+Service is currently deployed in AWS and can be accessed via http://3.65.0.193:8089
 
 
 ---
@@ -177,7 +177,7 @@ K3s is shipped with [Traefik ingress(https://traefik.io/solutions/kubernetes-ing
 
 ## Part 3. CI/CD
 
-CI/CD of app is implemented using GitHub Actions with single pipeline defined in [.github/workflows/ci-cd.yaml](https://github.com/antomer/nb-test-task/blob/main/.github/workflows/ci-cd.yaml)
+CI/CD of app is implemented using GitHub Actions with single pipeline defined in [.github/workflows/ci-cd.yaml](https://github.com/antomer/nb-test-task/blob/main/.github/workflows/ci-cd.yaml).
 
 
 Pipeline consists of 3 jobs:
@@ -186,15 +186,18 @@ Pipeline consists of 3 jobs:
 3. `deploy` - using Helm deploys container image built in step 2. to AWS 
 
 ### **`lint-test` job**
-`lint-test` job runs unit tests and lint checks for application code.
+Runs unit tests and lint checks for application code.
 
 ### **`build` job**
-`build` job builds and pushes container image to `DockerHub`, Requires repository secrets `DOCKER_HUB_USERNAME` `DOCKER_HUB_TOKEN` to be configured and match `DOCKER_HUB_REPOSITORY` set in `env` section. At the moment images are pushed to public DockerHub repositoryu `antomer/nb-simple-service`
+Builds and pushes container image to `DockerHub`, Requires repository secrets `DOCKER_HUB_USERNAME` `DOCKER_HUB_TOKEN` to be configured and match `DOCKER_HUB_REPOSITORY` set in `env` section. At the moment images are pushed to public DockerHub repositoryu `antomer/nb-simple-service`.
 
-`build` job is run only if `lint-test` job was successful
+`build` job is run only if `lint-test` job was successful.
 
 ### **`deploy` job**
-`deploy` job deploy helm chart with newly build image to K3S cluster. Helm chart and its values file is located in [app/.deploy/helm/](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm/) folder 
+deploy helm chart with newly build image to K3S cluster. Helm chart and its values file is located in [app/.deploy/helm/](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm/) folder.
+
+
+`deploy` job is run only on commits in `master` branch and if `build` job was successful.
 
 ### **Triggers**
 
@@ -203,4 +206,3 @@ Pipeline is triggered automatically in two cases:
 2. on each commit made in `master` branch. (triggers `lint-test` `build` and `deploy` jobs)
 
 Since it is a monorepo, GitHub Action is configured to execute only if changes made in `task-3/app/` folder or pipeline definition file itself.
-
