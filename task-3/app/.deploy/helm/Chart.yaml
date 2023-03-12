@@ -1,0 +1,4 @@
+apiVersion: v2
+name: nb-simple-service
+description: A Helm chart for nb-simple-service
+version: 0.1.0

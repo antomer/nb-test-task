@@ -1,0 +1,15 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    additionalArguments:
+    - "--entryPoints.{{ .Values.traefik.entryointName }}.address=:{{ .Values.deployment.container.port }}/tcp"
+    ports:
+      nbsimpleservice:
+        expose: true
+        port: {{ .Values.deployment.container.port }}
+        exposedPort: {{ .Values.deployment.container.port }}
+        protocol: TCP
