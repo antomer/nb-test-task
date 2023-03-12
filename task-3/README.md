@@ -4,7 +4,32 @@
 
 ---
 
-## Part 1. App
+## Table of contents
+
+- [Part 1. App](#part-1-app)
+    - [Test](#part-1-test)
+    - [Run](#part-1-run)
+    - [Build container image](#part-1-build) 
+    - [Deployment configuration](#part-1-deploy)
+- [Part 2. Infrastructure as Code](#part-2-iac)
+    - [Pre requisites](#part-2-prereq)
+    - [Module `init/`](#part-2-init) 
+        - [Apply](#part-2-init-apply)
+        - [Variables](#part-2-init-vars)
+        - [Resources](#part-2-init-resources)
+    - [Module `main/`](#part-2-main)
+        - [Apply](#part-2-main-apply)
+        - [Variables](#part-2-main-vars)
+        - [Resources](#part-2-main-resources)
+        - [Outputs](#part-2-main-output)
+        - [K3S](#part-2-main-k3s)
+- [Part 3. CI/CD](#part-3-cicd)
+    - [`lint-test` job](#part-3-lint-test)
+    - [`build` job](#part-3-lint-build)
+    - [`deploy` job](#part-3-lint-deploy)
+    - [Triggers](#part-3-lint-triggers)
+
+## [Part 1. App](#part-1-app)
 Simple HTTP server is developed using NodeJS. 
 
 App source code is located in [app/](https://github.com/antomer/nb-test-task/tree/master/task-3/app/) folder.
@@ -18,7 +43,7 @@ App reads and uses following environment variables:
 | LOGS_ENABLED | no       | true          | enable logs                            | 
 
 
-### Testing
+### [Test](#part-1-test)
 Server logic is tesed with unit tests located in [app/test/unit/](https://github.com/antomer/nb-test-task/tree/master/task-3/app/test/unit) folder.
 
 To run test execute:
@@ -26,7 +51,7 @@ To run test execute:
 npm i && npm run test
 ```
 
-### Run 
+### [Run](#part-1-run) 
 To run app you can either:
 1. Execute it as a node process (requires NodeJS & npm to be installed locally)
     ```
@@ -37,7 +62,7 @@ To run app you can either:
     docker build -t nb-simple-service . && docker run -p 8089:8089 -it nb-simple-service 
     ```
 
-### Build container image
+### [Build container image](#part-1-build) 
 App is packaged in container image and can be built using [app/Dockerfile](https://github.com/antomer/nb-test-task/tree/master/task-3/app/Dockerfile)
 
 For example:
@@ -45,7 +70,7 @@ For example:
 docker build -t nb-simple-service .
 ```
 
-### Deployment configuration
+### [Deployment configuration](#part-1-deploy) 
 Deplyoment is done using GitHub action and is run automatically when code is merged to master. Custom helm chart is used and it can be found in [app/.deploy/helm](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm) folder.
 
 Helm chart contains following kubernetes resources:
@@ -61,20 +86,20 @@ Service is currently deployed in AWS and can be accessed via http://3.65.0.193:8
 
 ---
 
-## Part 2. Infrastructure as Code
+## [Part 2. Infrastructure as Code](#part-2-iac)
 Infrastrucutre as Code is devloped using Terraform and deployed to free tier AWS account. Infrastructure source code is located in [infra/](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/) folder.
 
-### Pre requisites
+### [Pre requisites](#part-2-prereq)
 Following pre-requisites are required to run terraform
 1. AWS account https://aws.amazon.com/
 2. AWS CLI is set up https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html
 3. Terraform CLI is installed locally https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
 
-### **Module `init/`**
+### [Module `init/`](#part-2-init)
 In order to deploy main Terraform we need to provision s3 bucket to store terraform states and dynamoDB table to store terraform state locks. 
 Resoirce provisioning is also automated and can be done by [init module](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/init.tf)
 
-#### **How to apply**
+#### [**Apply**](#part-2-init-apply)
 1. make sure Pre requisites are fullfilled
 2. From [infra/init/](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/) folder run following command:
     ```
@@ -82,7 +107,7 @@ Resoirce provisioning is also automated and can be done by [init module](https:/
     terraform apply
     ```
 
-#### **Variables**
+#### [**Variables**](#part-2-init-vars)
 [init script](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/init.tf) has only two varaibles: 
  
 | var name   | required | default value    | description                                                  |
@@ -95,7 +120,7 @@ if needed default variable values can be changed on the run of `terraform apply`
 terraform apply -var="aws_region=..." -var="env_name=..."                                            
 ```
 
-#### **Created resources**
+#### [**Resources**](#part-2-init-resources)
 Creates following resources in AWS:
 
 ```
@@ -106,10 +131,10 @@ aws_s3_bucket_public_access_block.terraform_state_s3_bucket_public_access_block
 aws_s3_bucket_server_side_encryption_configuration.cassandra_backups_s3_bucket_encryption_config
 ```
 
-### **Module `main/`**
+### [Module `main/`](#part-2-main)
 Main Terraform module porvisions VPC with single public subnet, and single EC2 instance with k3s deployed on it. EC2 is publicly accissble. 
 
-#### **How to apply**
+#### [**Apply**](#part-2-main-apply)
 1. make sure pre requisites are fullfilled
 2. From [infra/main](https://github.com/antomer/nb-test-task/tree/master/task-3/infra/init/) folder run following command:
     ```
@@ -119,17 +144,7 @@ Main Terraform module porvisions VPC with single public subnet, and single EC2 i
 
 It will take few minutes to provision all resources.
 
-#### **Outputs**
-Main module have following outputs:
-
-| output name     | description                    | sensitive |
-|-----------------|--------------------------------|-----------|
-| ssh_private_key | SSH key to connect to k3s node | true      |
-| public_ip       | Public IP of k3s node          | false     |
-| kubeconfig      | Kubeconfig to connecto to k3s  | true      |
-
-
-#### **Variables**
+#### [**Variables**](#part-2-main-vars)
 
 | var name          | required | default value    | description                                                  |
 |-------------------|----------|------------------|--------------------------------------------------------------|
@@ -144,7 +159,7 @@ if needed default variable values can be changed on the run of `terraform apply`
 terraform apply -var="aws_region=..." -var="env_name=..." ...                                         
 ```
 
-#### **Created resources**
+#### [**Resources**](#part-2-main-resources)
 
 Creates following resources in AWS:
 ```
@@ -168,14 +183,23 @@ module.vpc.aws_subnet.public[0]
 module.vpc.aws_vpc.this[0]
 ```
 
-#### **K3S**
+#### [**Outputs**](#part-2-main-output)
+Main module have following outputs:
+
+| output name     | description                    | sensitive |
+|-----------------|--------------------------------|-----------|
+| ssh_private_key | SSH key to connect to k3s node | true      |
+| public_ip       | Public IP of k3s node          | false     |
+| kubeconfig      | Kubeconfig to connecto to k3s  | true      |
+
+#### [**K3S**](#part-2-main-k3s)
 [K3S](https://k3s.io/) was chosen as an container orchestrator as it is very slim and could fit into EC2 instance (`t3.micro`) (2CPU, 1GB RAM) available on AWS Free Tier.
 
-K3s is shipped with [Traefik ingress(https://traefik.io/solutions/kubernetes-ingress/)]
+K3s is shipped with [Traefik ingress](https://traefik.io/solutions/kubernetes-ingress/)
 
 ---
 
-## Part 3. CI/CD
+## [Part 3. CI/CD](#part-3-cicd)
 
 CI/CD of app is implemented using GitHub Actions with single pipeline defined in [.github/workflows/ci-cd.yaml](https://github.com/antomer/nb-test-task/blob/main/.github/workflows/ci-cd.yaml).
 
@@ -185,21 +209,21 @@ Pipeline consists of 3 jobs:
 2. `build` - builds and pushes container image to `DockerHub`
 3. `deploy` - using Helm deploys container image built in step 2. to AWS 
 
-### **`lint-test` job**
+### [**`lint-test` job**](#part-3-lint-test)
 Runs unit tests and lint checks for application code.
 
-### **`build` job**
+### [**`build` job**](#part-3-lint-build)
 Builds and pushes container image to `DockerHub`, Requires repository secrets `DOCKER_HUB_USERNAME` `DOCKER_HUB_TOKEN` to be configured and match `DOCKER_HUB_REPOSITORY` set in `env` section. At the moment images are pushed to public DockerHub repositoryu `antomer/nb-simple-service`.
 
 `build` job is run only if `lint-test` job was successful.
 
-### **`deploy` job**
+### [**`deploy` job**](#part-3-lint-deploy)
 deploy helm chart with newly build image to K3S cluster. Helm chart and its values file is located in [app/.deploy/helm/](https://github.com/antomer/nb-test-task/tree/master/task-3/app/.deploy/helm/) folder.
 
 
 `deploy` job is run only on commits in `master` branch and if `build` job was successful.
 
-### **Triggers**
+### [**Triggers**](#part-3-lint-triggers)
 
 Pipeline is triggered automatically in two cases:
 1. on each commit in Pull Request made to master (triggers only `lint-test` and `build` jobs)
